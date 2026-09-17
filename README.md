@@ -1,5 +1,7 @@
 # openjev
 
+> **Disclaimer:** This project was inspired by [vinnylarouge/jevlike](https://github.com/vinnylarouge/jevlike). It is an independent reimplementation and is not affiliated with or endorsed by the original author.
+
 One-pass option scoring with a local Gemma 3 4B on Apple silicon via MLX.
 Design notes: [docs/one-pass-option-scoring.md](docs/one-pass-option-scoring.md).
 
