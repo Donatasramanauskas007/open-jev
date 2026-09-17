@@ -2,6 +2,10 @@
 
 > **Disclaimer:** This project was inspired by [vinnylarouge/jevlike](https://github.com/vinnylarouge/jevlike). It is an independent reimplementation and is not affiliated with or endorsed by the original author.
 
+![openjev scoring options live in Doom](docs/media/doom-recording.gif)
+
+*Live demo: the local model scores the available actions each frame. [Full-resolution video (.mov)](docs/media/doom-recording.mov).*
+
 One-pass option scoring with a local Gemma 3 4B on Apple silicon via MLX.
 Design notes: [docs/one-pass-option-scoring.md](docs/one-pass-option-scoring.md).
 
