@@ -1,0 +1,24 @@
+{
+  "state": "Our Stripe connection has been failing for three days and we are losing sales every hour. We need this fixed urgently.",
+  "model": "jev-latest",
+  "questions": {
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should take this ticket?",
+      "criteria": {
+        "billing": "Payment, invoice or subscription problems",
+        "technical": "Bugs, outages and integration failures",
+        "sales": "Pricing, plans and account inquiries"
+      }
+    },
+    "frustration": {
+      "type": "score",
+      "instructions": "How frustrated does the customer seem?",
+      "criteria": ["Calm and factual", "Annoyed but polite", "Furious, harsh wording"]
+    },
+    "is_urgent": {
+      "type": "noul",
+      "instructions": "Does the customer need a response within the hour?"
+    }
+  }
+}

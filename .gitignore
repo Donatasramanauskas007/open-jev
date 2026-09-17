@@ -1,0 +1,22 @@
+.venv/
+models/
+__pycache__/
+*.pyc
+.DS_Store
+runs/
+*.npz
+
+# ViZDoom writes this config into the cwd on first launch
+_vizdoom.ini
+
+# Python tooling
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+
+# Local secrets
+.env
+.env.*
