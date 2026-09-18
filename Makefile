@@ -13,7 +13,7 @@ FEATS  ?= runs/feats
 HEAD   ?= runs/head.safetensors
 SEP    ?= \nChoice: 
 
-.PHONY: help setup venv model serve health request systemone score check bench eval features train eval-head clean
+.PHONY: help setup venv model serve health request doom systemone score check bench eval features train eval-head clean
 
 help:
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -34,6 +34,9 @@ health: ## curl the running server's health endpoint
 
 request: ## example scoring request against the running server
 	@curl -s $(HOST):$(PORT)/score -H 'content-type: application/json' -d '{"context": "Customer: my order arrived broken. Agent:", "options": [" I am sorry to hear that, I will send a replacement today.", " Please read our returns policy.", " Have you tried turning it off and on again?"], "norm": "$(NORM)"}'; echo
+
+doom: ## play Doom in the terminal, the running server picks every action (SCENARIO=defend_the_center API=score)
+	$(BIN)/python demo/doom/play.py --scenario $(SCENARIO) --api $(API) --url http://$(HOST):$(PORT) --api-key $(API_KEY)
 
 systemone: ## TypeSafe quickstart example (choice + score + noul) against the running server
 	@curl -s $(HOST):$(PORT)/v1/systemone -H 'Authorization: Bearer $(API_KEY)' -H 'Content-Type: application/json' -d @examples/systemone-quickstart.json; echo

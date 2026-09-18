@@ -201,6 +201,12 @@ The synthetic task is easy for both. The real validation is your own labelled ro
 same split. If Gemma zero-shot is close to the trained head, Route B is enough; if not, train a head
 (Route A) with `make features && make train && make eval-head`.
 
+## Demo: Doom in the terminal
+
+`demo/doom/` runs ViZDoom headless, describes each frame in a line of text, and
+lets the server rank the action menu with one `/score` call (or one System One
+`choice` question). Start `make serve`, then `make doom`. Details and keys in
+
 ## Layout
 
 - `openjev/scorer.py`: `OptionScorer` (prefill, cache expansion, batched scoring, naive reference).
@@ -210,4 +216,5 @@ same split. If Gemma zero-shot is close to the trained head, Route B is enough; 
 - `openjev/head.py`: jevlike's cross-attention head in `mlx.nn`, save/load.
 - `openjev/train.py`: head training loop and evaluation (top-k, ECE, shuffled-context control).
 - `openjev/cli.py`: `openjev score | eval | bench | check | serve | features | train | eval-head`.
+- `demo/doom/`: Doom in the terminal, the server picks every action (`make doom`).
 - `models/`: downloaded weights (git-ignored).
