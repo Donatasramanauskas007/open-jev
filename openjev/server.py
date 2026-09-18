@@ -1,7 +1,7 @@
 """HTTP server: one loaded model, many scoring requests.
 
     openjev serve --host 0.0.0.0 --port 8000
-    curl -s localhost:8000/score -H 'content-type: application/json' \
+    curl -s localhost:8000/score -H 'content-type: application/json' \\
       -d '{"context": "The capital of France is", "options": [" Paris", " Berlin"]}'
 """
 from __future__ import annotations

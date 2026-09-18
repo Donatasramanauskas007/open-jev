@@ -15,7 +15,6 @@ dependencies = [
 
 [project.optional-dependencies]
 torch = ["torch>=2.14.0", "accelerate>=1.0"]   # only for jevlike comparison and HF cross-checks
-doom = ["vizdoom>=1.2.4"]                         # demo/doom: play Doom in the terminal with the server choosing actions
 
 [project.scripts]
 openjev = "openjev.cli:main"

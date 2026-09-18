@@ -1,4 +1,4 @@
-"""Command line entry points: score, eval, bench, check."""
+"""Command line entry points: score, eval, bench, check, serve, features, train, eval-head."""
 from __future__ import annotations
 
 import argparse
@@ -165,6 +165,33 @@ def cmd_serve(args: argparse.Namespace) -> None:
     serve(args.host, args.port, args.model, args.batch_size)
 
 
+def cmd_features(args: argparse.Namespace) -> None:
+    from .features import extract_dataset
+
+    scorer = _scorer(args)
+    meta = extract_dataset(scorer, args.data, args.out, limit=args.limit, chat=args.chat, sep=args.sep,
+                           contextual=args.contextual)
+    print(json.dumps(meta))
+
+
+def cmd_train(args: argparse.Namespace) -> None:
+    from .train import train
+
+    print(json.dumps(train(args.train, args.validation, args.out, rank=args.rank, epochs=args.epochs,
+                           batch_size=args.batch_size, lr=args.learning_rate, seed=args.seed)))
+
+
+def cmd_eval_head(args: argparse.Namespace) -> None:
+    from .features import FeatureSet
+    from .head import AttentionHead
+    from .train import evaluate
+
+    head, cfg = AttentionHead.load(args.checkpoint)
+    fs = FeatureSet(args.features)
+    print(json.dumps({"model": evaluate(head, fs), "shuffled_context": evaluate(head, fs, shuffle_context=True),
+                      "checkpoint": args.checkpoint, "rank": cfg["rank"]}, indent=2))
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="openjev", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -198,7 +225,32 @@ def main(argv: list[str] | None = None) -> None:
         b.add_argument("--tol", type=float, default=0.5, help="check: max abs log-prob diff allowed")
         b.set_defaults(fn=fn)
 
-    v = sub.add_parser("serve", help="HTTP server with the model loaded once (POST /score)")
+    f = sub.add_parser("features", help="cache frozen-Gemma features for a JSONL file into an .npz")
+    _add_common(f)
+    f.add_argument("data")
+    f.add_argument("--out", required=True)
+    f.add_argument("--limit", type=int, default=0)
+    f.add_argument("--contextual", action="store_true",
+                   help="encode options as continuations of the context (leaks the match into option features)")
+    f.set_defaults(fn=cmd_features)
+
+    tr = sub.add_parser("train", help="train the attention head on cached features")
+    tr.add_argument("train")
+    tr.add_argument("--validation", required=True)
+    tr.add_argument("--out", default="runs/head.safetensors")
+    tr.add_argument("--rank", type=int, default=256)
+    tr.add_argument("--epochs", type=int, default=8)
+    tr.add_argument("--batch-size", type=int, default=64)
+    tr.add_argument("--learning-rate", type=float, default=5e-4)
+    tr.add_argument("--seed", type=int, default=7)
+    tr.set_defaults(fn=cmd_train)
+
+    eh = sub.add_parser("eval-head", help="top-k, ECE and shuffled-context control for a trained head")
+    eh.add_argument("checkpoint")
+    eh.add_argument("features")
+    eh.set_defaults(fn=cmd_eval_head)
+
+    v = sub.add_parser("serve", help="HTTP server with the model loaded once (POST /score, /v1/systemone)")
     v.add_argument("--model", default=DEFAULT_MODEL)
     v.add_argument("--batch-size", type=int, default=8)
     v.add_argument("--host", default="127.0.0.1")

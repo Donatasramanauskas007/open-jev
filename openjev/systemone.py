@@ -4,7 +4,7 @@ POST /v1/systemone
   {"state": <string|object|array>, "model": "...", "questions": {id: Choice|Score|Noul}}
   -> {"model": "...", "answers": {id: answer}, "usage": {"input_tokens": n, "output_tokens": n}}
 
-Every question is rendered into a plain-text prompt ending in "Answer:\n" and the candidate
+Every question is rendered into a plain-text prompt ending in "Answer:\\n" and the candidate
 labels are scored as continuations with one prefix-shared batched forward pass per question.
 Nothing is generated. Confidence is 1 - normalised entropy of the probability distribution,
 an approximation of TypeSafe's "how spread out is the distribution" definition.
