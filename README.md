@@ -1,8 +1,8 @@
 # openjev
 
 One-pass option scoring with a local Gemma 3 4B on Apple silicon via MLX.
-Design notes: [docs/one-pass-option-scoring.md](docs/one-pass-option-scoring.md);
-per-task training: [docs/per-task-finetuning-with-gemma.md](docs/per-task-finetuning-with-gemma.md).
+Design notes: [docs/design/one-pass-option-scoring.md](docs/design/one-pass-option-scoring.md);
+per-task training: [docs/design/per-task-finetuning-with-gemma.md](docs/design/per-task-finetuning-with-gemma.md).
 
 Given a context and a list of pre-written options, the model prefills the
 context once, expands that KV cache across the option batch, and scores every
@@ -206,6 +206,11 @@ same split. If Gemma zero-shot is close to the trained head, Route B is enough; 
 `demo/doom/` runs ViZDoom headless, describes each frame in a line of text, and
 lets the server rank the action menu with one `/score` call (or one System One
 `choice` question). Start `make serve`, then `make doom`. Details and keys in
+[`demo/doom/README.md`](demo/doom/README.md).
+
+![openjev playing Doom in the terminal: the model ranks the action menu each step](docs/media/doom-recording.gif)
+
+Full-resolution recording: [docs/media/doom-recording.mov](docs/media/doom-recording.mov).
 
 ## Layout
 
