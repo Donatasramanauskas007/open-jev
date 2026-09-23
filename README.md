@@ -10,6 +10,17 @@ option in a single padded forward pass. No decoding. The score is the
 log-probability of the option tokens given the context; a softmax over the
 option scores gives a probability per option, like `jevlike-predict`.
 
+## Demo: Doom in the terminal
+
+`demo/doom/` runs ViZDoom headless, describes each frame in a line of text, and
+lets the server rank the action menu with one `/score` call (or one System One
+`choice` question). Start `make serve`, then `make doom`. Details and keys in
+[`demo/doom/README.md`](demo/doom/README.md).
+
+![openjev playing Doom in the terminal: the model ranks the action menu each step](docs/media/doom-recording.gif)
+
+Full-resolution recording: [docs/media/doom-recording.mov](docs/media/doom-recording.mov).
+
 ## Setup
 
 ```sh
@@ -200,17 +211,6 @@ The synthetic task is easy for both. The real validation is your own labelled ro
 `openjev eval` on them zero-shot and compare against a `jevlike-train`/`jevlike-eval` run on the
 same split. If Gemma zero-shot is close to the trained head, Route B is enough; if not, train a head
 (Route A) with `make features && make train && make eval-head`.
-
-## Demo: Doom in the terminal
-
-`demo/doom/` runs ViZDoom headless, describes each frame in a line of text, and
-lets the server rank the action menu with one `/score` call (or one System One
-`choice` question). Start `make serve`, then `make doom`. Details and keys in
-[`demo/doom/README.md`](demo/doom/README.md).
-
-![openjev playing Doom in the terminal: the model ranks the action menu each step](docs/media/doom-recording.gif)
-
-Full-resolution recording: [docs/media/doom-recording.mov](docs/media/doom-recording.mov).
 
 ## Layout
 
