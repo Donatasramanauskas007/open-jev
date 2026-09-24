@@ -1,6 +1,6 @@
 # openjev
 
-One-pass option scoring with a local Gemma 3 4B on Apple silicon via MLX.
+One-pass option scoring with a local Gemma 3 4B: MLX on Apple silicon, or PyTorch on Windows and Linux (CPU or GPU).
 Design notes: [docs/design/one-pass-option-scoring.md](docs/design/one-pass-option-scoring.md);
 per-task training: [docs/design/per-task-finetuning-with-gemma.md](docs/design/per-task-finetuning-with-gemma.md).
 
@@ -22,6 +22,54 @@ lets the server rank the action menu with one `/score` call (or one System One
 Full-resolution recording: [docs/media/doom-recording.mov](docs/media/doom-recording.mov).
 
 ## Setup
+
+### Windows and Linux
+
+Install Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/), then run these commands from the repository in PowerShell or a Linux shell:
+
+```sh
+uv sync
+uv run hf auth login
+uv run hf download google/gemma-3-4b-it --local-dir models/gemma-3-4b-it
+uv run openjev serve --backend torch --device auto --port 8000
+```
+
+Accept the Gemma license on Hugging Face before downloading. You can also pass
+`--model google/gemma-3-4b-it` to load directly from the Hugging Face cache.
+No Make, Xcode, shell activation, or `.venv/bin` paths are needed here.
+
+`--backend auto` (the default) selects MLX on Apple silicon and PyTorch elsewhere.
+For PyTorch, `--device auto` selects CUDA when available, then MPS, then CPU.
+Use `--device cuda` or `--device cuda:1` to require a specific GPU (fails clearly
+if CUDA is unavailable), or `--device cpu` to force CPU inference.
+
+For NVIDIA acceleration, install the GPU driver and a matching PyTorch build using
+the [official PyTorch installer](https://pytorch.org/get-started/locally/).
+Run its pip command in this repository's virtual environment (use `uv pip install`
+in place of `pip3 install`). After a custom PyTorch install, use `uv run --no-sync`
+so uv does not replace your selected build. On supported Linux AMD systems,
+PyTorch ROCm builds also use the `cuda` device name.
+
+```sh
+uv run --no-sync python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+uv run --no-sync openjev serve --backend torch --device cuda --batch-size 2
+uv run --no-sync openjev check --backend torch --device cuda
+uv run --no-sync openjev score --backend torch --device cuda --context "The capital of France is" --option " Paris" --option " Berlin"
+```
+
+The base 4B weights need roughly 8 GB just for GPU model weights at 16-bit precision,
+plus memory for activations and the option KV caches. Reduce `--batch-size` and
+context length if you run out of GPU memory. CPU runs use float32 and need more RAM.
+Use original Hugging Face weights with PyTorch; MLX quantized weights and MLX LoRA
+adapters are not supported by this backend.
+
+Scoring, evaluation, benchmarks, correctness checks, and both HTTP scoring endpoints
+support PyTorch. Frozen-feature extraction, head training/evaluation, and the chess
+LoRA training workflow still require MLX on Apple silicon. The Doom terminal UI
+also has its own platform dependencies; cross-platform support here covers the
+scoring CLI and HTTP server.
+
+### Apple silicon / existing Make workflow
 
 ```sh
 make setup       # uv sync (arm64 Python 3.12 venv) + download google/gemma-3-4b-it into models/ (gated; needs HF login)
@@ -61,8 +109,9 @@ make eval DATA=data/synthetic/test.jsonl
 
 ## Server
 
-Loads the model once and answers scoring requests in about 90 ms each. Runs natively on macOS with
-Metal; there is no container path because Linux containers cannot reach the Apple GPU.
+Loads the model once. The measured Apple silicon MLX path answers scoring requests in about
+90 ms each; PyTorch latency depends on your CPU/GPU. Use `uv run openjev serve` on any
+supported platform, or the Make shortcut below on macOS.
 
 ```sh
 make serve                                     # = .venv/bin/openjev serve --port 8000
@@ -214,6 +263,7 @@ same split. If Gemma zero-shot is close to the trained head, Route B is enough; 
 
 ## Layout
 
+- `openjev/torch_backend.py`: PyTorch CPU/GPU inference and shared-prefix KV cache scoring.
 - `openjev/scorer.py`: `OptionScorer` (prefill, cache expansion, batched scoring, naive reference).
 - `openjev/systemone.py`: System One request/answer models, prompt renderers, zero-shot answers.
 - `openjev/server.py`: FastAPI app, `/health`, `/score`, `/v1/systemone`.
@@ -223,3 +273,15 @@ same split. If Gemma zero-shot is close to the trained head, Route B is enough; 
 - `openjev/cli.py`: `openjev score | eval | bench | check | serve | features | train | eval-head`.
 - `demo/doom/`: Doom in the terminal, the server picks every action (`make doom`).
 - `models/`: downloaded weights (git-ignored).
+
+## Development checks
+
+```sh
+uv sync --extra torch --group test
+uv run python -m unittest discover -s tests -v
+```
+
+The offline tests use a tiny randomly initialized Gemma model to compare cached,
+padded scoring with full re-encoding, including sliding-window attention, multiple
+batch sizes, normalization, and repeated requests. CI runs them on Windows, Linux,
+and macOS. Actual GPU availability and throughput must be checked on your hardware.

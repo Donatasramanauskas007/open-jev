@@ -12,7 +12,10 @@ from .scorer import DEFAULT_MODEL, NORMS, OptionScorer, iter_jsonl
 
 
 def _add_common(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--backend", choices=("auto", "mlx", "torch"), default="auto")
+    p.add_argument("--device", default="auto", help="auto, cpu, cuda, cuda:N, or mps (torch backend)")
     p.add_argument("--model", default=DEFAULT_MODEL, help="local dir or HF repo id")
+    p.add_argument("--adapter", default=None, help="LoRA adapter dir to load on top of --model (e.g. adapters/chess-lora)")
     p.add_argument("--batch-size", type=int, default=8, help="options per forward pass")
     p.add_argument("--norm", choices=NORMS, default="mean",
                    help="mean: per-token log-prob; sum: total; pmi: sum minus unconditional")
@@ -23,7 +26,7 @@ def _add_common(p: argparse.ArgumentParser) -> None:
 
 def _scorer(args: argparse.Namespace) -> OptionScorer:
     t = time.perf_counter()
-    s = OptionScorer(args.model, batch_size=args.batch_size, chat=args.chat, sep=args.sep)
+    s = OptionScorer(args.model, batch_size=args.batch_size, chat=args.chat, sep=args.sep, adapter_path=args.adapter, backend=args.backend, device=args.device)
     print(f"loaded {args.model} in {time.perf_counter() - t:.1f}s", file=sys.stderr)
     return s
 
@@ -162,10 +165,13 @@ def cmd_check(args: argparse.Namespace) -> None:
 def cmd_serve(args: argparse.Namespace) -> None:
     from .server import serve
 
-    serve(args.host, args.port, args.model, args.batch_size)
+    serve(args.host, args.port, args.model, args.batch_size, backend=args.backend, device=args.device)
 
 
 def cmd_features(args: argparse.Namespace) -> None:
+    import platform
+    if platform.system() != "Darwin" or platform.machine() != "arm64" or getattr(args, "backend", "auto") == "torch":
+        raise SystemExit("Feature extraction and head training/evaluation require MLX on Apple silicon. Scoring and serving support Windows/Linux via torch.")
     from .features import extract_dataset
 
     scorer = _scorer(args)
@@ -175,6 +181,9 @@ def cmd_features(args: argparse.Namespace) -> None:
 
 
 def cmd_train(args: argparse.Namespace) -> None:
+    import platform
+    if platform.system() != "Darwin" or platform.machine() != "arm64" or getattr(args, "backend", "auto") == "torch":
+        raise SystemExit("Feature extraction and head training/evaluation require MLX on Apple silicon. Scoring and serving support Windows/Linux via torch.")
     from .train import train
 
     print(json.dumps(train(args.train, args.validation, args.out, rank=args.rank, epochs=args.epochs,
@@ -182,6 +191,9 @@ def cmd_train(args: argparse.Namespace) -> None:
 
 
 def cmd_eval_head(args: argparse.Namespace) -> None:
+    import platform
+    if platform.system() != "Darwin" or platform.machine() != "arm64" or getattr(args, "backend", "auto") == "torch":
+        raise SystemExit("Feature extraction and head training/evaluation require MLX on Apple silicon. Scoring and serving support Windows/Linux via torch.")
     from .features import FeatureSet
     from .head import AttentionHead
     from .train import evaluate
@@ -253,6 +265,8 @@ def main(argv: list[str] | None = None) -> None:
     v = sub.add_parser("serve", help="HTTP server with the model loaded once (POST /score, /v1/systemone)")
     v.add_argument("--model", default=DEFAULT_MODEL)
     v.add_argument("--batch-size", type=int, default=8)
+    v.add_argument("--backend", choices=("auto", "mlx", "torch"), default="auto")
+    v.add_argument("--device", default="auto", help="auto, cpu, cuda, cuda:N, or mps")
     v.add_argument("--host", default="127.0.0.1")
     v.add_argument("--port", type=int, default=8000)
     v.set_defaults(fn=cmd_serve)

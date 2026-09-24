@@ -1,5 +1,28 @@
 # CLI reference
 
+## Backend and device selection
+
+Scoring commands (`score`, `eval`, `bench`, `check`) and `serve` accept:
+
+| Flag | Default | Behavior |
+| --- | --- | --- |
+| `--backend` | `auto` | `mlx` on Apple silicon, `torch` elsewhere; can be set explicitly. |
+| `--device` | `auto` | PyTorch: CUDA if available, then MPS, then CPU. Accepts `cpu`, `cuda`, `cuda:N`, or `mps`. |
+
+Use `uv run openjev` in place of `.venv/bin/openjev` in examples to run them on
+Windows or Linux. After installing a custom GPU PyTorch build, use
+`uv run --no-sync openjev` to retain it.
+
+```sh
+uv run openjev score --backend torch --device cpu --context "The capital of France is" --option " Paris" --option " Berlin"
+uv run --no-sync openjev serve --backend torch --device cuda --batch-size 2
+```
+
+An explicitly selected unavailable GPU produces an error. MLX uses Metal and does
+not support PyTorch device selection. MLX adapters are unsupported with PyTorch.
+`features`, `train`, and `eval-head` still require MLX on Apple silicon.
+
+
 The package installs one entry point, `openjev`:
 
 ```

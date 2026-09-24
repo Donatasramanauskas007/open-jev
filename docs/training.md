@@ -1,5 +1,11 @@
 # Training a head
 
+!!! note "Platform requirement"
+    The feature extraction, head training/evaluation, and chess LoRA workflows
+    require MLX on Apple silicon. The PyTorch backend supports scoring and serving
+    on Windows/Linux; it does not port these training workflows or load MLX adapters.
+
+
 Zero-shot scoring is a good default, but softmaxed next-token likelihoods are
 not calibrated judgements. When you have labelled rows, you can freeze Gemma
 and train a small cross-attention head on top of its features — jevlike's

@@ -2,10 +2,65 @@
 
 ## Requirements
 
-- macOS on Apple silicon (the model runs on the GPU through Metal).
+- Windows or Linux for PyTorch inference (CPU or a supported GPU), or macOS on
+  Apple silicon for MLX/Metal. Head training and feature extraction require MLX.
 - [uv](https://docs.astral.sh/uv/) for the Python 3.12 environment.
 - A Hugging Face login with access to `google/gemma-3-4b-it`, which is a gated
   repository.
+
+## Windows and Linux
+
+From the repository root, these commands work in PowerShell and Linux shells:
+
+```sh
+uv sync
+uv run hf auth login
+uv run hf download google/gemma-3-4b-it --local-dir models/gemma-3-4b-it
+uv run openjev serve --backend torch --device auto --port 8000
+```
+
+Accept Google's Gemma license on Hugging Face before downloading. You can instead
+pass `--model google/gemma-3-4b-it` to load from the Hugging Face cache. No Make or
+virtual-environment activation is required.
+
+### GPU setup
+
+Install your GPU driver and the appropriate PyTorch build using the
+[official PyTorch installer](https://pytorch.org/get-started/locally/). Run its
+installation command inside this project's environment, replacing `pip3 install`
+with `uv pip install`. Use `uv run --no-sync` afterward to preserve that build.
+
+```sh
+uv run --no-sync python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+uv run --no-sync openjev serve --backend torch --device cuda --batch-size 2
+uv run --no-sync openjev check --backend torch --device cuda
+```
+
+`--device auto` chooses CUDA, then MPS, then CPU according to availability.
+`--device cuda` requires a working GPU installation and reports an error otherwise.
+Use `cuda:1` to select another GPU or `cpu` to force CPU inference. Supported AMD
+ROCm installations on Linux also use PyTorch's `cuda` device name.
+
+Allow roughly 8 GB for the 4B model's 16-bit weights, plus memory for activations
+and option caches. Reduce batch size or context length if GPU memory is tight.
+CPU inference uses float32 and needs more RAM. PyTorch requires original Hugging
+Face weights; MLX quantized checkpoints and MLX LoRA adapters are unsupported.
+
+### Score and verify
+
+```sh
+uv run openjev score --context "The capital of France is" --option " Paris" --option " Berlin"
+uv run openjev check
+uv run openjev bench
+```
+
+Use `uv run --no-sync` in these examples if you installed a custom GPU build.
+Scoring, evaluation, benchmarking, correctness checks, `/score`, and
+`/v1/systemone` support both backends. Feature extraction, head training/evaluation,
+and chess LoRA training remain MLX workflows on Apple silicon. The Doom terminal
+UI has separate platform dependencies.
+
+## Apple silicon setup
 
 !!! warning "Xcode licence"
     `make` on macOS needs the Xcode licence accepted

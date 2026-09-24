@@ -1,4 +1,4 @@
-"""Zero-shot option scoring with Gemma 3 via mlx-lm (Route B in docs/design/one-pass-option-scoring.md).
+"""Zero-shot option scoring with Gemma 3 via MLX or PyTorch (Route B in docs/design/one-pass-option-scoring.md).
 
 The context is prefilled once. Its KV cache is then expanded across the batch
 dimension so every option is scored in one padded forward pass that shares the
@@ -12,9 +12,7 @@ import time
 from dataclasses import dataclass, asdict
 from typing import Iterable, Sequence
 
-import mlx.core as mx
-from mlx_lm import load
-from mlx_lm.models.cache import KVCache
+import platform
 
 DEFAULT_MODEL = "models/gemma-3-4b-it"
 NORMS = ("mean", "sum", "pmi")
@@ -45,7 +43,9 @@ class OptionScorer:
     """Scores pre-written options as continuations of a context with a causal LM.
 
     Args:
-        model_path: local directory or HF repo id understood by ``mlx_lm.load``.
+        model_path: local directory or Hugging Face repo id.
+        backend: auto selects MLX on Apple silicon, PyTorch elsewhere.
+        device: PyTorch device (auto, cpu, cuda, cuda:N, mps).
         batch_size: maximum number of options scored in one forward pass.
         chat: wrap the context in Gemma's chat template (user turn, generation
             prompt appended) so options are scored as the start of the reply.
@@ -59,8 +59,32 @@ class OptionScorer:
         batch_size: int = 8,
         chat: bool = False,
         sep: str = "",
+        adapter_path: str | None = None,
+        backend: str = "auto",
+        device: str = "auto",
     ) -> None:
-        self.model, self.tok = load(model_path)
+        if backend not in ("auto", "mlx", "torch"):
+            raise ValueError("backend must be auto, mlx, or torch")
+        self.backend = ("mlx" if platform.system() == "Darwin" and platform.machine() == "arm64"
+                        else "torch") if backend == "auto" else backend
+        self._engine = None
+        if self.backend == "torch":
+            from .torch_backend import TorchBackend
+            self._engine = TorchBackend(model_path, device, adapter_path)
+            self.model, self.tok = self._engine.model, self._engine.tok
+            self.device = str(self._engine.device)
+        else:
+            if device not in ("auto", "mps"):
+                raise ValueError("MLX uses Metal; use --backend torch for --device selection")
+            global mx, KVCache
+            try:
+                import mlx.core as mx
+                from mlx_lm import load
+                from mlx_lm.models.cache import KVCache
+            except ImportError as exc:
+                raise RuntimeError("MLX requires Apple silicon; use --backend torch") from exc
+            self.model, self.tok = load(model_path, adapter_path=adapter_path)
+            self.device = "metal"
         self.batch_size = max(1, batch_size)
         self.chat = chat
         self.sep = sep
@@ -95,6 +119,10 @@ class OptionScorer:
 
     # --------------------------------------------------------------- prefill
     def _prefill(self, ids: list[int]) -> tuple[list[KVCache], mx.array]:
+        if not ids:
+            raise ValueError("context must contain tokens (or the tokenizer must define BOS)")
+        if self._engine is not None:
+            return self._engine.prefill(ids)
         cache = [KVCache() for _ in self.model.layers]
         logits = self.model(mx.array(ids)[None], cache=cache)
         last = logits[0, -1]
@@ -116,6 +144,8 @@ class OptionScorer:
         self, cache: list[KVCache], last: mx.array, opts: list[list[int]]
     ) -> list[float]:
         """Sum of log p(option tokens | prefix) for each option, sharing the prefix cache."""
+        if self._engine is not None:
+            return self._engine.score_with_prefix(cache, last, opts, self.batch_size, self.pad_id)
         sums: list[float] = []
         for start in range(0, len(opts), self.batch_size):
             chunk = opts[start : start + self.batch_size]
@@ -155,6 +185,8 @@ class OptionScorer:
 
         uncond: list[float] | None = None
         if norm == "pmi":
+            if self.bos_id is None:
+                raise ValueError("PMI requires a tokenizer with a BOS token")
             base_cache, base_last = self._prefill([self.bos_id])
             uncond = self._score_with_prefix(base_cache, base_last, opts)
         t3 = time.perf_counter()
@@ -197,6 +229,8 @@ class OptionScorer:
         batched path and to benchmark against it.
         """
         ctx = self.context_ids(context)
+        if self._engine is not None:
+            return self._engine.score_naive(ctx, [self.option_ids(o) for o in options])
         out = []
         for o in options:
             oid = self.option_ids(o)

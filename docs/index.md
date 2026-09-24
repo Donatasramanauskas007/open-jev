@@ -1,5 +1,17 @@
 # openjev
 
+## Platform support
+
+Run the scoring CLI and HTTP server on **Windows or Linux with PyTorch**, using
+CPU or a supported GPU, or on **Apple silicon with MLX/Metal**. The default backend
+is selected automatically. See [Getting started](getting-started.md) for portable
+setup commands and CUDA/ROCm installation guidance.
+
+Frozen-feature extraction, head training/evaluation, and chess LoRA training still
+require Apple silicon/MLX. Published latency measurements refer to the original
+Apple silicon setup, not Windows/Linux performance.
+
+
 One-pass option scoring with a local Gemma 3 4B on Apple silicon via MLX.
 
 Given a context and a list of pre-written options, the model prefills the
