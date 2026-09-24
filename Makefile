@@ -68,3 +68,23 @@ eval-head: ## top-k, ECE and shuffled-context control of $(HEAD) on $(FEATS)/tes
 
 clean: ## remove caches and run artefacts (keeps the venv and model)
 	rm -rf runs __pycache__ openjev/__pycache__
+
+# --- chess next-move fine-tune (see finetune/README.md) ---
+ADAPTER ?= adapters/chess-lora
+
+chess-data: ## sample Lichess puzzles from the Hub into data/chess/{train,valid,test}.jsonl
+	$(BIN)/python finetune/prepare_chess_data.py --puzzles 3000 --out data/chess
+
+chess-train: ## LoRA-finetune $(MODEL) on data/chess with mlx_lm.lora -> $(ADAPTER)
+	$(BIN)/python -m mlx_lm.lora --model $(MODEL) --train --data data/chess \
+	  --fine-tune-type lora --num-layers 16 --batch-size 4 --iters 1000 \
+	  --steps-per-report 50 --steps-per-eval 200 --val-batches 50 \
+	  --learning-rate 1e-4 --max-seq-length 512 --mask-prompt --save-every 200 \
+	  --adapter-path $(ADAPTER) --seed 0
+
+chess-eval: ## rank legal moves on data/chess/test.jsonl, base model vs $(ADAPTER)
+	$(BIN)/python finetune/eval_chess.py --model $(MODEL)
+	$(BIN)/python finetune/eval_chess.py --model $(MODEL) --adapter $(ADAPTER)
+
+chess-play: ## play chess against $(ADAPTER) in the terminal (PLAY=white|black)
+	$(BIN)/python finetune/play_chess.py --model $(MODEL) --adapter $(ADAPTER) --play $(or $(PLAY),white)

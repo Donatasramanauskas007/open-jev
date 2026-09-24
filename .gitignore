@@ -10,3 +10,8 @@ _vizdoom.ini
 
 # mkdocs build output
 site/
+adapters/
+data/chess/
+
+# Local planning notes
+/ideas/
